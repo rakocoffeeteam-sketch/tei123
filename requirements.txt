@@ -1,4 +1,4 @@
-flask
-flask-sqlalchemy
-flask-cors
+Flask
+Flask-sqlalchemy
+Flask-cors
 gunicorn
