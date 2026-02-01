@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>店家後台管理</title>
+    <style>
+        body { font-family: sans-serif; background-color: #2c3e50; color: white; padding: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        table { width: 100%; border-collapse: collapse; background: #34495e; margin-top: 20px; }
+        th, td { border: 1px solid #444; padding: 15px; text-align: center; }
+        th { background-color: #1abc9c; }
+        button { background: #e67e22; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 訂單管理 (雲端版)</h1>
+        <button onclick="loadOrders()">🔄 刷新列表</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>單號</th>
+                    <th>品項</th>
+                    <th>金額</th>
+                    <th>狀態</th>
+                    <th>動作</th>
+                </tr>
+            </thead>
+            <tbody id="admin-list">
+                <tr><td colspan="5">連線雲端中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_URL = 'https://tei123.onrender.com';
+
+        function loadOrders() {
+            fetch(`${API_URL}/api/admin/orders`)
+                .then(res => res.json())
+                .then(data => {
+                    let html = '';
+                    data.forEach(o => {
+                        html += `
+                            <tr>
+                                <td>${o.id}</td>
+                                <td>${o.items}</td>
+                                <td>$${o.total_amount}</td>
+                                <td>${o.status}</td>
+                                <td>
+                                    <button onclick="updateStatus(${o.id})">通知取餐</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    document.getElementById('admin-list').innerHTML = html;
+                });
+        }
+
+        function updateStatus(id) {
+            fetch(`${API_URL}/api/admin/update_status/${id}`, { method: 'POST' })
+                .then(() => {
+                    alert("已發送取餐通知！");
+                    loadOrders();
+                });
+        }
+
+        loadOrders();
+    </script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>精品咖啡點餐系統</title>
+    <style>
+        body { font-family: "Microsoft JhengHei", sans-serif; background-color: #fdfaf7; color: #4e342e; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 500px; }
+        h1 { color: #6f4e37; text-align: center; }
+        #status-bar { width: 100%; background: #e67e22; color: white; text-align: center; padding: 12px; border-radius: 8px; margin-bottom: 20px; display: none; font-weight: bold; }
+        .bean-card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 6px solid #a67c52; }
+        .bean-name { font-size: 1.3em; font-weight: bold; margin: 0; }
+        .bean-info { color: #8d6e63; font-size: 0.9em; margin: 5px 0; }
+        .bean-flavor { background: #f8f1eb; padding: 10px; border-radius: 6px; font-size: 0.95em; margin: 10px 0; }
+        .price-tag { color: #a67c52; font-weight: bold; font-size: 1.2em; }
+        button { background-color: #6f4e37; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; float: right; transition: 0.2s; }
+        button:hover { background-color: #4e342e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>☕ 精品咖啡豆單</h1>
+        <div id="status-bar"></div>
+        <div id="menu-list">正在從雲端讀取豆單...</div>
+    </div>
+
+    <script>
+        const API_URL = 'https://tei123.onrender.com';
+
+        // 1. 抓取豆單
+        function fetchMenu() {
+            fetch(`${API_URL}/api/menu`)
+                .then(res => res.json())
+                .then(data => {
+                    let html = '';
+                    data.forEach(bean => {
+                        html += `
+                            <div class="bean-card">
+                                <button onclick="sendOrder('${bean.name}', ${bean.price})">點餐</button>
+                                <p class="bean-name">${bean.name}</p>
+                                <p class="bean-info">${bean.origin} | ${bean.roast_level}</p>
+                                <div class="bean-flavor"><strong>風味：</strong>${bean.flavor}</div>
+                                <span class="price-tag">$${bean.price}</span>
+                                <div style="clear: both;"></div>
+                            </div>
+                        `;
+                    });
+                    document.getElementById('menu-list').innerHTML = html;
+                })
+                .catch(err => {
+                    document.getElementById('menu-list').innerHTML = "連線雲端失敗，請確認後端是否正在起床中...";
+                });
+        }
+
+        // 2. 傳送訂單
+        function sendOrder(name, price) {
+            fetch(`${API_URL}/api/order`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bean_name: name, price: price })
+            })
+            .then(res => res.json())
+            .then(result => {
+                alert("下單成功！單號：" + result.order_id);
+                trackStatus(result.order_id);
+            });
+        }
+
+        // 3. 追蹤狀態
+        function trackStatus(orderId) {
+            const statusBar = document.getElementById('status-bar');
+            statusBar.style.display = 'block';
+            statusBar.style.background = '#e67e22';
+            statusBar.innerHTML = `正在製作單號 ${orderId} 的咖啡...`;
+
+            const interval = setInterval(() => {
+                fetch(`${API_URL}/api/order_status/${orderId}`)
+                    .then(res => res.json())
+                    .then
